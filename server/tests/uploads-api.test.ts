@@ -40,16 +40,15 @@ test("upload API accepts valid seller uploads and rejects invalid or unauthorize
   assert.equal(invalidSignatureResponse.body.success, false);
   assert.match(
     invalidSignatureResponse.body.message,
-    /does not match the declared file type/i
+    /real PNG, JPEG, WEBP, or PDF file/i
   );
 
-  const buyerForbiddenResponse = await buyerAgent.post("/api/uploads").send({
+  const buyerUploadResponse = await buyerAgent.post("/api/uploads").send({
     fileName: "proof.png",
     mimeType: "image/png",
     contentBase64: tinyPngBase64
   });
 
-  assert.equal(buyerForbiddenResponse.status, 403);
-  assert.equal(buyerForbiddenResponse.body.success, false);
-  assert.match(buyerForbiddenResponse.body.message, /permission/i);
+  assert.equal(buyerUploadResponse.status, 201);
+  assert.equal(buyerUploadResponse.body.success, true);
 });

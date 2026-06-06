@@ -48,10 +48,10 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma client
-        run: npx prisma generate --schema server/prisma/schema.prisma
+        run: npm exec --workspace server prisma generate
 
       - name: Apply migrations
-        run: npx prisma migrate deploy --schema server/prisma/schema.prisma
+        run: npm exec --workspace server prisma migrate deploy
 
       - name: Seed database
         run: npm run prisma:seed --workspace server

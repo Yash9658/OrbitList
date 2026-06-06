@@ -64,10 +64,14 @@ server/server/uploads/
 server/email-outbox/
 server/backups/
 server/backups/database/
-uploads/
+/uploads/
 email-outbox/
 backups/
 .vercel/    
+
+# Keep source upload module tracked
+!server/src/modules/uploads/
+!server/src/modules/uploads/**
 
 # OS and editor files
 .DS_Store

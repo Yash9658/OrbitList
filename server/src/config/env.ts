@@ -75,14 +75,6 @@ const envSchema = z
       });
     }
 
-    if (!value.RESEND_API_KEY) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "RESEND_API_KEY is required in production for live email delivery",
-        path: ["RESEND_API_KEY"]
-      });
-    }
-
     if (!value.SUPABASE_URL || !value.SUPABASE_SERVICE_ROLE_KEY) {
       context.addIssue({
         code: z.ZodIssueCode.custom,

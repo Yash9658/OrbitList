@@ -76,6 +76,8 @@ Optional but recommended:
 - `SENTRY_ENVIRONMENT`
 - `SENTRY_TRACES_SAMPLE_RATE`
 
+If `RESEND_API_KEY` is omitted, emails are written to the configured outbox instead of being sent live. Add Resend before a real public launch.
+
 ## Cookie settings for production
 
 Use:

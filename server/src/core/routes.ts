@@ -1,0 +1,34 @@
+import { Router } from "express";
+import { auditRouter } from "../modules/audit/audit.routes.js";
+import { authRouter } from "../modules/auth/auth.routes.js";
+import { billingRouter } from "../modules/billing/billing.routes.js";
+import { conversationsRouter } from "../modules/conversations/conversations.routes.js";
+import { favoritesRouter } from "../modules/favorites/favorites.routes.js";
+import { healthRouter } from "../modules/health/health.routes.js";
+import { identityRouter } from "../modules/identity/identity.routes.js";
+import { insightsRouter } from "../modules/insights/insights.routes.js";
+import { listingsRouter } from "../modules/listings/listings.routes.js";
+import { notificationsRouter } from "../modules/notifications/notifications.routes.js";
+import { payoutsRouter } from "../modules/payouts/payouts.routes.js";
+import { reportsRouter } from "../modules/reports/reports.routes.js";
+import { transactionsRouter } from "../modules/transactions/transactions.routes.js";
+import { uploadsRouter } from "../modules/uploads/uploads.routes.js";
+import { verificationsRouter } from "../modules/verifications/verifications.routes.js";
+
+export const apiRouter = Router();
+
+apiRouter.use("/health", healthRouter);
+apiRouter.use("/audit-logs", auditRouter);
+apiRouter.use("/auth", authRouter);
+apiRouter.use("/billing", billingRouter);
+apiRouter.use("/conversations", conversationsRouter);
+apiRouter.use("/favorites", favoritesRouter);
+apiRouter.use("/identity", identityRouter);
+apiRouter.use("/insights", insightsRouter);
+apiRouter.use("/listings", listingsRouter);
+apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/payouts", payoutsRouter);
+apiRouter.use("/reports", reportsRouter);
+apiRouter.use("/transactions", transactionsRouter);
+apiRouter.use("/uploads", uploadsRouter);
+apiRouter.use("/verifications", verificationsRouter);

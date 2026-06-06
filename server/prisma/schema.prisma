@@ -1,0 +1,518 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  BOTH
+  ADMIN
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  SOLD
+  REJECTED
+  ARCHIVED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InquiryStatus {
+  OPEN
+  CLOSED
+  CONVERTED
+}
+
+enum PaymentType {
+  SUBSCRIPTION
+  FEATURED_LISTING
+  ESCROW
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum TransactionStatus {
+  PENDING_PAYMENT
+  FUNDS_SECURED
+  HANDOFF_SUBMITTED
+  BUYER_REVIEW
+  COMPLETED
+  DISPUTED
+  CANCELLED
+  REFUNDED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_FOR_BUYER
+  RESOLVED_FOR_SELLER
+  CLOSED
+}
+
+enum PayoutStatus {
+  NOT_READY
+  PENDING_RELEASE
+  RELEASED
+  REFUND_PENDING
+  REFUNDED
+  BLOCKED
+}
+
+enum IdentityVerificationStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ConnectedAccountStatus {
+  NOT_CONNECTED
+  PENDING
+  ACTION_REQUIRED
+  ACTIVE
+  RESTRICTED
+}
+
+model User {
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  passwordHash         String
+  fullName             String?
+  username             String?               @unique
+  avatarUrl            String?
+  bio                  String?
+  country              String?
+  role                 UserRole              @default(BUYER)
+  isVerified           Boolean               @default(false)
+  prefInAppMessages    Boolean               @default(true)
+  prefInAppMarketplace Boolean               @default(true)
+  prefInAppTransactions Boolean              @default(true)
+  prefInAppTrust       Boolean               @default(true)
+  prefEmailMessages    Boolean               @default(true)
+  prefEmailMarketplace Boolean               @default(true)
+  prefEmailTransactions Boolean              @default(true)
+  prefEmailTrust       Boolean               @default(true)
+  prefEmailBilling     Boolean               @default(true)
+  stripeConnectedAccountId String?           @unique
+  stripeConnectedAccountStatus ConnectedAccountStatus @default(NOT_CONNECTED)
+  stripeConnectedAccountStatusReason String?
+  stripeConnectedAccountOnboardedAt DateTime?
+  stripeConnectedAccountLastSyncedAt DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  listings             Listing[]
+  favorites            Favorite[]
+  buyerConversations   Conversation[]        @relation("BuyerConversations")
+  sellerConversations  Conversation[]        @relation("SellerConversations")
+  buyerInquiries       Inquiry[]             @relation("BuyerInquiries")
+  sellerInquiries      Inquiry[]             @relation("SellerInquiries")
+  messages             Message[]
+  subscriptions        Subscription[]
+  payments             Payment[]
+  buyerTransactions    Transaction[]         @relation("BuyerTransactions")
+  sellerTransactions   Transaction[]         @relation("SellerTransactions")
+  openedDisputes       Dispute[]             @relation("OpenedDisputes")
+  resolvedDisputes     Dispute[]             @relation("ResolvedDisputes")
+  disputeEvidenceSubmissions DisputeEvidence[]
+  disputeCaseEvents    DisputeCaseEvent[]
+  identityVerification IdentityVerification?
+  reviewedIdentityVerifications IdentityVerification[] @relation("ReviewedIdentityVerifications")
+  submittedReports     Report[]              @relation("SubmittedReports")
+  reviewedReports      Report[]              @relation("ReviewedReports")
+  receivedReports      Report[]              @relation("ReportedUsers")
+  notifications        Notification[]
+  verificationRequests VerificationRequest[]
+  refreshSessions      RefreshSession[]
+  auditLogs            AuditLog[]
+}
+
+model Platform {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  icon      String?
+  isActive  Boolean   @default(true)
+  listings  Listing[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Niche {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  listings  Listing[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Listing {
+  id                  String                @id @default(cuid())
+  sellerId            String
+  platformId          String
+  nicheId             String?
+  title               String
+  slug                String                @unique
+  handle              String?
+  description         String?
+  price               Decimal               @db.Decimal(12, 2)
+  currency            String                @default("USD")
+  status              ListingStatus         @default(DRAFT)
+  isFeatured          Boolean               @default(false)
+  isVerified          Boolean               @default(false)
+  primaryCountry      String?
+  audienceAgeRange    String?
+  transferNotes       String?
+  publishedAt         DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  seller              User                  @relation(fields: [sellerId], references: [id])
+  platform            Platform              @relation(fields: [platformId], references: [id])
+  niche               Niche?                @relation(fields: [nicheId], references: [id])
+  metrics             ListingMetric?
+  media               ListingMedia[]
+  favorites           Favorite[]
+  inquiries           Inquiry[]
+  conversations       Conversation[]
+  payments            Payment[]
+  transactions        Transaction[]
+  verificationRecords VerificationRequest[]
+  reports             Report[]
+
+  @@index([sellerId, status])
+  @@index([platformId, status, createdAt])
+  @@index([price])
+}
+
+model ListingMetric {
+  id                 String   @id @default(cuid())
+  listingId          String   @unique
+  followersCount     Int?
+  engagementRate     Float?
+  monthlyViews       Int?
+  monthlyReach       Int?
+  monetized          Boolean  @default(false)
+  verifiedBadge      Boolean  @default(false)
+  audienceTopCountry String?
+  lastUpdatedAt      DateTime @default(now())
+  listing            Listing  @relation(fields: [listingId], references: [id])
+}
+
+model ListingMedia {
+  id        String   @id @default(cuid())
+  listingId String
+  type      String
+  fileUrl   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  listing   Listing  @relation(fields: [listingId], references: [id])
+
+  @@unique([userId, listingId])
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  listingId String
+  buyerId   String
+  sellerId  String
+  status    InquiryStatus @default(OPEN)
+  createdAt DateTime      @default(now())
+  listing   Listing       @relation(fields: [listingId], references: [id])
+  buyer     User          @relation("BuyerInquiries", fields: [buyerId], references: [id])
+  seller    User          @relation("SellerInquiries", fields: [sellerId], references: [id])
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  listingId     String
+  buyerId       String
+  sellerId      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime?
+  listing       Listing   @relation(fields: [listingId], references: [id])
+  buyer         User      @relation("BuyerConversations", fields: [buyerId], references: [id])
+  seller        User      @relation("SellerConversations", fields: [sellerId], references: [id])
+  messages      Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  messageText    String
+  createdAt      DateTime     @default(now())
+  readAt         DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+}
+
+model VerificationRequest {
+  id         String             @id @default(cuid())
+  listingId  String
+  sellerId   String
+  status     VerificationStatus @default(PENDING)
+  notes      String?
+  reviewedAt DateTime?
+  createdAt  DateTime           @default(now())
+  listing    Listing            @relation(fields: [listingId], references: [id])
+  seller     User               @relation(fields: [sellerId], references: [id])
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  priceMonthly  Decimal        @db.Decimal(10, 2)
+  listingLimit  Int
+  featuredSlots Int            @default(0)
+  supportLevel  String?
+  isActive      Boolean        @default(true)
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String
+  planId               String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               String
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id])
+  plan                 Plan      @relation(fields: [planId], references: [id])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String
+  listingId             String?
+  planId                String?
+  stripeCheckoutSessionId String?     @unique
+  stripePaymentIntentId String?
+  amount                Decimal       @db.Decimal(12, 2)
+  currency              String        @default("USD")
+  type                  PaymentType
+  status                PaymentStatus @default(PENDING)
+  createdAt             DateTime      @default(now())
+  user                  User          @relation(fields: [userId], references: [id])
+  listing               Listing?      @relation(fields: [listingId], references: [id])
+  plan                  Plan?         @relation(fields: [planId], references: [id])
+}
+
+model Transaction {
+  id                    String            @id @default(cuid())
+  listingId             String
+  buyerId               String
+  sellerId              String
+  agreedPrice           Decimal           @db.Decimal(12, 2)
+  currency              String            @default("USD")
+  status                TransactionStatus @default(PENDING_PAYMENT)
+  buyerNotes            String?
+  sellerNotes           String?
+  handoffNotes          String?
+  reviewDeadlineAt      DateTime?
+  completedAt           DateTime?
+  sellerPayoutStatus    PayoutStatus         @default(NOT_READY)
+  sellerPayoutLastAttemptAt DateTime?
+  sellerPayoutReleasedAt DateTime?
+  sellerPayoutReference String?
+  sellerPayoutFailureReason String?
+  refundIssuedAt        DateTime?
+  refundReference       String?
+  stripeCheckoutSessionId String?         @unique
+  stripePaymentIntentId String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  listing               Listing           @relation(fields: [listingId], references: [id])
+  buyer                 User              @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  seller                User              @relation("SellerTransactions", fields: [sellerId], references: [id])
+  disputes              Dispute[]
+
+  @@index([buyerId, status, createdAt])
+  @@index([sellerId, status, createdAt])
+  @@index([listingId, createdAt])
+}
+
+model Dispute {
+  id              String        @id @default(cuid())
+  transactionId   String
+  openedById      String
+  status          DisputeStatus @default(OPEN)
+  reason          String
+  details         String?
+  resolutionNotes String?
+  adminInternalNotes String?
+  priority        String        @default("normal")
+  resolvedById    String?
+  resolvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  openedBy        User          @relation("OpenedDisputes", fields: [openedById], references: [id])
+  resolvedBy      User?         @relation("ResolvedDisputes", fields: [resolvedById], references: [id])
+  evidence        DisputeEvidence[]
+  caseEvents      DisputeCaseEvent[]
+
+  @@index([transactionId, createdAt])
+  @@index([status, createdAt])
+}
+
+model DisputeEvidence {
+  id            String   @id @default(cuid())
+  disputeId      String
+  submittedById  String
+  visibility     String   @default("participants")
+  kind           String   @default("file")
+  fileUrl        String
+  note           String?
+  createdAt      DateTime @default(now())
+  dispute        Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  submittedBy    User     @relation(fields: [submittedById], references: [id])
+
+  @@index([disputeId, createdAt])
+  @@index([submittedById, createdAt])
+}
+
+model DisputeCaseEvent {
+  id          String   @id @default(cuid())
+  disputeId   String
+  actorUserId String?
+  type        String
+  visibility  String   @default("participants")
+  message     String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([disputeId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model IdentityVerification {
+  id                    String                     @id @default(cuid())
+  userId                String                     @unique
+  status                IdentityVerificationStatus @default(NOT_STARTED)
+  legalName             String?
+  dateOfBirth           DateTime?
+  country               String?
+  documentType          String?
+  documentNumberLast4   String?
+  addressLine1          String?
+  city                  String?
+  postalCode            String?
+  documentUrl           String?
+  notes                 String?
+  rejectionReason       String?
+  reviewedAt            DateTime?
+  reviewedById          String?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  user                  User                       @relation(fields: [userId], references: [id])
+  reviewedBy            User?                      @relation("ReviewedIdentityVerifications", fields: [reviewedById], references: [id])
+
+  @@index([status, createdAt])
+  @@index([reviewedById])
+}
+
+model Report {
+  id              String       @id @default(cuid())
+  reporterId      String
+  listingId       String?
+  reportedUserId  String?
+  reason          String
+  details         String?
+  status          ReportStatus @default(OPEN)
+  resolutionNotes String?
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime     @default(now())
+  reporter        User         @relation("SubmittedReports", fields: [reporterId], references: [id])
+  reviewer        User?        @relation("ReviewedReports", fields: [reviewedById], references: [id])
+  listing         Listing?     @relation(fields: [listingId], references: [id])
+  reportedUser    User?        @relation("ReportedUsers", fields: [reportedUserId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([listingId, status])
+  @@index([reportedUserId, status])
+  @@index([reviewedById])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([action, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model RefreshSession {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt])
+}

@@ -1,0 +1,21 @@
+{
+  "name": "social-profile-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace client\" \"npm run dev --workspace server\"",
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "build": "npm run build --workspace client && npm run build --workspace server",
+    "lint": "npm run lint --workspace client && npm run lint --workspace server"
+  },
+  "devDependencies": {
+    "concurrently": "latest"
+  }
+}
+

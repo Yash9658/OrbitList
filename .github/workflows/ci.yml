@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: social_profile_marketplace
+          POSTGRES_USER: orbitlist
+          POSTGRES_PASSWORD: orbitlist_dev_pw
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U orbitlist -d social_profile_marketplace"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://orbitlist:orbitlist_dev_pw@localhost:5433/social_profile_marketplace
+      JWT_SECRET: ci-secret
+      CLIENT_URL: http://localhost:5173
+      AUTH_COOKIE_SECURE: "false"
+      ALLOWED_CORS_ORIGINS: http://localhost:5173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema server/prisma/schema.prisma
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy --schema server/prisma/schema.prisma
+
+      - name: Seed database
+        run: npm run prisma:seed --workspace server
+
+      - name: Build workspace
+        run: npm run build
+
+      - name: Run server tests
+        run: npm run test --workspace server
+
+      - name: Run client tests
+        run: npm run test --workspace client

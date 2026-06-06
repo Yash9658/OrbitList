@@ -3,7 +3,7 @@ services:
     name: orbitlist-api
     runtime: node
     plan: starter
-    buildCommand: npm ci && npm run prisma:generate --workspace server && npm run build --workspace server
+    buildCommand: npm ci --include=dev && npm run prisma:generate --workspace server && npm run build --workspace server
     preDeployCommand: npm exec prisma migrate deploy --workspace server
     startCommand: npm run start --workspace server
     healthCheckPath: /api/health

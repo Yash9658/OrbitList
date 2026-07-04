@@ -163,100 +163,54 @@ export const router = createBrowserRouter([
       { path: "marketplace", element: lazyElement(MarketplacePage) },
       { path: "listing/:slug", element: lazyElement(ListingDetailPage) },
       { path: "pricing", element: lazyElement(PricingPage) },
-      { path: "login", element: lazyElement(LoginPage) }
-    ]
-  },
-  {
-    path: "/",
-    element: <ProtectedRoute />,
-    errorElement: <RouteErrorPage />,
-    children: [
+      { path: "login", element: lazyElement(LoginPage) },
       {
-        path: "dashboard",
-        element: <PublicLayout />,
+        element: <ProtectedRoute />,
         children: [
-          { index: true, element: lazyElement(DashboardPage) },
-          { path: "listings/new", element: lazyElement(CreateListingPage) },
-          { path: "listings/:id/edit", element: lazyElement(EditListingPage) },
-          { path: "verification", element: lazyElement(VerificationPage) }
+          {
+            path: "dashboard",
+            children: [
+              { index: true, element: lazyElement(DashboardPage) },
+              { path: "listings/new", element: lazyElement(CreateListingPage) },
+              { path: "listings/:id/edit", element: lazyElement(EditListingPage) },
+              { path: "verification", element: lazyElement(VerificationPage) }
+            ]
+          },
+          {
+            path: "messages",
+            children: [
+              { index: true, element: lazyElement(MessagesPage) },
+              { path: ":id", element: lazyElement(ConversationPage) }
+            ]
+          },
+          {
+            path: "transactions",
+            children: [
+              { index: true, element: lazyElement(TransactionsPage) },
+              { path: "success", element: lazyElement(TransactionSuccessPage) },
+              { path: "cancel", element: lazyElement(TransactionCancelPage) },
+              { path: ":id", element: lazyElement(TransactionDetailPage) }
+            ]
+          },
+          { path: "watchlist", element: lazyElement(WatchlistPage) },
+          { path: "notifications", element: lazyElement(NotificationsPage) },
+          { path: "settings", element: lazyElement(SettingsPage) },
+          {
+            path: "billing",
+            children: [
+              { index: true, element: lazyElement(BillingPage) },
+              { path: "success", element: lazyElement(BillingSuccessPage) },
+              { path: "cancel", element: lazyElement(BillingCancelPage) }
+            ]
+          },
+          { path: "admin/verifications", element: lazyElement(AdminVerificationPage) },
+          { path: "admin/listings", element: lazyElement(AdminListingsPage) },
+          { path: "admin/payments", element: lazyElement(AdminPaymentsPage) },
+          { path: "admin/reports", element: lazyElement(AdminReportsPage) },
+          { path: "admin/audit-logs", element: lazyElement(AdminAuditLogsPage) },
+          { path: "admin/disputes", element: lazyElement(AdminDisputesPage) },
+          { path: "admin/identity", element: lazyElement(AdminIdentityPage) }
         ]
-      },
-      {
-        path: "messages",
-        element: <PublicLayout />,
-        children: [
-          { index: true, element: lazyElement(MessagesPage) },
-          { path: ":id", element: lazyElement(ConversationPage) }
-        ]
-      },
-      {
-        path: "transactions",
-        element: <PublicLayout />,
-        children: [
-          { index: true, element: lazyElement(TransactionsPage) },
-          { path: ":id", element: lazyElement(TransactionDetailPage) },
-          { path: "success", element: lazyElement(TransactionSuccessPage) },
-          { path: "cancel", element: lazyElement(TransactionCancelPage) }
-        ]
-      },
-      {
-        path: "watchlist",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(WatchlistPage) }]
-      },
-      {
-        path: "notifications",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(NotificationsPage) }]
-      },
-      {
-        path: "settings",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(SettingsPage) }]
-      },
-      {
-        path: "billing",
-        element: <PublicLayout />,
-        children: [
-          { index: true, element: lazyElement(BillingPage) },
-          { path: "success", element: lazyElement(BillingSuccessPage) },
-          { path: "cancel", element: lazyElement(BillingCancelPage) }
-        ]
-      },
-      {
-        path: "admin/verifications",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminVerificationPage) }]
-      },
-      {
-        path: "admin/listings",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminListingsPage) }]
-      },
-      {
-        path: "admin/payments",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminPaymentsPage) }]
-      },
-      {
-        path: "admin/reports",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminReportsPage) }]
-      },
-      {
-        path: "admin/audit-logs",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminAuditLogsPage) }]
-      },
-      {
-        path: "admin/disputes",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminDisputesPage) }]
-      },
-      {
-        path: "admin/identity",
-        element: <PublicLayout />,
-        children: [{ index: true, element: lazyElement(AdminIdentityPage) }]
       }
     ]
   }
